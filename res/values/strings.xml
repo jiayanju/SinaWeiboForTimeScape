@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">新浪微薄Timescape</string>
+    <string name="service_name">新浪微薄Timescape</string>
+    <string name="register_txt">Register your account information</string>
+    <string name="logout_label">Log out</string>
+
+</resources>
