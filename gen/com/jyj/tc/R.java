@@ -24,5 +24,7 @@ public final class R {
         public static final int logout_label=0x7f040003;
         public static final int register_txt=0x7f040002;
         public static final int service_name=0x7f040001;
+        public static final int sina_weibo_logout_dialog_text=0x7f040005;
+        public static final int sina_weibo_logout_dialog_title=0x7f040004;
     }
 }

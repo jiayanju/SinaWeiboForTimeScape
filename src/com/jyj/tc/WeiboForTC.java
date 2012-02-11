@@ -1,20 +1,21 @@
 package com.jyj.tc;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
-
-import android.content.ContentValues;
-import android.nfc.Tag;
-import android.util.Log;
-
-import com.jyj.tc.EventStreamConstants.Config;
-import com.jyj.tc.EventStreamConstants.WeiboConf;
 
 import weibo4android.Paging;
 import weibo4android.Status;
 import weibo4android.User;
 import weibo4android.Weibo;
 import weibo4android.WeiboException;
+import android.R.integer;
+import android.content.ContentValues;
+import android.util.Log;
+
+import com.jyj.tc.EventStreamConstants.Config;
+import com.jyj.tc.EventStreamConstants.WeiboConf;
 
 public class WeiboForTC {
     
@@ -63,11 +64,13 @@ public class WeiboForTC {
 	if (inserted != 0) {
 	    setPagingSinceIdForMessages(messages.get(0).getId());
 	}
+	
+	refreshFriendsListInEventStream(messages, sourceId, dataAccessor);
     }
     
     public List<Status> getHomeTimeLine() throws WeiboException {
 	mWeibo = getWeibo();
-	Paging messagePaging = getpPaging(WeiboConf.PAGING_TYPE_MESSAGE);
+	Paging messagePaging = getPaging(WeiboConf.PAGING_TYPE_MESSAGE);
 	List<Status> statuses = mWeibo.getHomeTimeline(messagePaging);
 	if (statuses == null) {
 	    statuses = new ArrayList<Status>();
@@ -88,7 +91,7 @@ public class WeiboForTC {
 	return user;
     }
     
-    private Paging getpPaging(String pageType) {
+    private Paging getPaging(String pageType) {
 	Paging paging = new Paging();
 	paging.setCount(WeiboConf.PAGING_COUNT);
 	if (WeiboConf.PAGING_TYPE_MESSAGE.equals(pageType) || WeiboConf.PAGING_TYPE_STATUS.equals(pageType)) {
@@ -99,5 +102,53 @@ public class WeiboForTC {
 	}
 	
 	return paging;
+    }
+    
+    private void refreshFriendsListInEventStream(List<Status> statuses, long sourceId, DataAccessor dataAccessor) {
+	List<Long> friendIds = dataAccessor.getFriendListFromEventStream(sourceId);
+	Collection<User> senders = getSenders(statuses);
+	
+	User updatedFriend = null;
+	Object [] userArray = senders.toArray();
+	ArrayList<ContentValues> bulkInsertedValues = new ArrayList<ContentValues>();
+	
+	for (int i = 0; i < userArray.length; i++) {
+	    updatedFriend = (User) userArray[i];
+	    long updatedFriendId = updatedFriend.getId();
+	    if (friendIds.contains(updatedFriendId)) {
+		friendIds.remove(updatedFriendId);
+	    } else {
+		bulkInsertedValues.add(dataAccessor.createContentValuesForFriend(updatedFriend, sourceId));
+		if (bulkInsertedValues.size() >= DataAccessor.BULK_INSERT_MAX_COUNT) {
+		    dataAccessor.bulkInsertFriends(bulkInsertedValues);
+		}
+	    }
+	}
+	
+	if (bulkInsertedValues.size() > 0) {
+	    dataAccessor.bulkInsertFriends(bulkInsertedValues);
+	}
+	
+    }
+    
+    
+    private Collection<User> getSenders(List<Status> statuses) {
+	HashMap<Long, User> users = new HashMap<Long, User>();
+	for (Status status : statuses) {
+	    User user = status.getUser();
+	    users.put(user.getId(), user);
+	}
+	return users.values();
+    }
+    
+    public void sendUpdateMessage(String updateMessage) throws WeiboException {
+	mWeibo = getWeibo();
+	mWeibo.updateStatus(updateMessage);
+    }
+    
+    public void logout() throws WeiboException {
+	mWeibo = getWeibo();
+	mWeibo.endSession();
+	mSettings.logout();
     }
 }

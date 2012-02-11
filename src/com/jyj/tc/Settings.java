@@ -100,6 +100,19 @@ public class Settings {
 	return 0;
     }
     
+    public void logout() {
+	SharedPreferences preferences = mContext.getSharedPreferences(CONFIG_STORE, MODE_PRIVATE);
+	if (preferences == null) {
+	    return;
+	}
+	
+	Editor editor = preferences.edit();
+	if (editor != null) {
+	    editor.clear();
+	    editor.apply();
+	}
+    }
+    
     
     /**
      * Remove a setting

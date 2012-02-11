@@ -2,6 +2,7 @@ package com.jyj.tc;
 
 import static com.jyj.tc.Constants.LOGOUT_INTENT;
 
+import com.jyj.tc.EventStreamConstants.EventstreamIntentData;
 import com.jyj.tc.EventStreamConstants.EventstreamIntents;
 
 import android.content.BroadcastReceiver;
@@ -30,6 +31,12 @@ public class EventStreamListener extends BroadcastReceiver {
 	    serviceiIntent = new Intent(Constants.REGISTER_PLUGIN_INTENT);
 	} else if (EventstreamIntents.REFRESH_REQUEST_INTENT.equals(action)) {
 	    serviceiIntent = new Intent(Constants.REFRESH_REQUEST_INTENT);
+	} else if (EventstreamIntents.STATUS_UPDATE_INTENT.equals(action)){
+	    String updateMessage = intent.getExtras().getString(EventstreamIntentData.EXTRA_STATUS_UPDATE_MESSAGE);
+	    if (updateMessage != null && updateMessage.length() > 0) {
+		serviceiIntent = new Intent(Constants.SEND_STATUS_UPDATE_INTENT);
+		serviceiIntent.putExtra(EventstreamIntentData.EXTRA_STATUS_UPDATE_MESSAGE, updateMessage);
+	    }
 	}
 	
 	if (serviceiIntent != null) {
@@ -46,6 +53,7 @@ public class EventStreamListener extends BroadcastReceiver {
 	}
 	
 	String action = intent.getAction();
+	Log.v(TAG, "Validate Intent Action : " + action);
 	if (action == null) {
 	    return false;
 	}

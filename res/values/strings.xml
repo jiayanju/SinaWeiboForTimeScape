@@ -5,5 +5,7 @@
     <string name="service_name">新浪微薄Timescape</string>
     <string name="register_txt">Register your account information</string>
     <string name="logout_label">Log out</string>
+    <string name="sina_weibo_logout_dialog_title">Log out</string>
+    <string name="sina_weibo_logout_dialog_text">Do you want to log out?</string>
 
 </resources>

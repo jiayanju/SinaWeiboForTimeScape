@@ -7,6 +7,9 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.jyj.tc.EventStreamConstants.Config;
+import com.jyj.tc.EventStreamConstants.EventstreamIntentData;
+import com.jyj.tc.EventStreamConstants.EventstreamIntents;
+import com.jyj.tc.WeiboForTCApplication.State;
 
 public class WeiboForTCService extends IntentService {
     
@@ -56,6 +59,19 @@ public class WeiboForTCService extends IntentService {
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }
+	} else if (Constants.SEND_STATUS_UPDATE_INTENT.equals(action)) {
+	    try {
+		String updateMessage = intent.getExtras().getString(EventstreamIntentData.EXTRA_STATUS_UPDATE_MESSAGE);
+		sendUpdateMessage(updateMessage);
+	    } catch (Exception e) {
+		// TODO: handle exception
+	    }
+	} else if (Constants.LOGOUT_INTENT.equals(action)) {
+	    try {
+		logout();
+	    } catch (Exception e) {
+		// TODO: handle exception
+	    }
 	}
 	
     }
@@ -99,6 +115,33 @@ public class WeiboForTCService extends IntentService {
 	}
     }
     
+    private void sendUpdateMessage(String updateMessage) throws WeiboException,
+	    EventStreamException {
+	DataAccessor dataAccessor = new DataAccessor(getApplicationContext());
+	WeiboForTC weiboForTC = WeiboForTCFactory
+		.getWeiboForTC(getApplicationContext());
+	if (weiboForTC.isLoginedIn() && dataAccessor.isRegistered()
+		&& updateMessage.length() <= Constants.STATUS_TEXT_MAX_LENGTH) {
+	    if (Config.DEBUG) {
+		Log.d(TAG, "Post " + updateMessage);
+	    }
+	    weiboForTC.sendUpdateMessage(updateMessage);
+	    dataAccessor.insertUpdateStatusIntoEventStream(updateMessage,
+		    System.currentTimeMillis());
+	}
+    }
+    
+    private void logout() throws WeiboException, EventStreamException {
+	DataAccessor dataAccessor = new DataAccessor(getApplicationContext());
+	WeiboForTC weiboForTC = WeiboForTCFactory.getWeiboForTC(getApplicationContext());
+	if (weiboForTC.isLoginedIn() && dataAccessor.isRegistered()) {
+	    weiboForTC.logout();
+	    dataAccessor.setLogoutInEventStream();
+	    dataAccessor.clearStatusInSourceTable();
+	    ((WeiboForTCApplication)getApplication()).setState(State.NOT_AUTHENTICATED);
+	}
+    }
+    
     public static class EventStreamException extends Exception {
 	
 	private static final long serialVersionUID = 7610569405079218488L;
@@ -107,4 +150,5 @@ public class WeiboForTCService extends IntentService {
 	    super(message);
 	}
     }
+    
 }

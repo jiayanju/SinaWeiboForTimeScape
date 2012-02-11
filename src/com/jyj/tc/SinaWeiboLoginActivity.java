@@ -32,7 +32,6 @@ public class SinaWeiboLoginActivity extends Activity {
     private static final String TAG = "SinaWeiboLoginActivity";
     
     private LinearLayout mContentLayout;
-    private TextView mTitle;
     private WebView mWebView;
     private String mUrl;
     private ProgressDialog mProgressDialog;
@@ -54,24 +53,10 @@ public class SinaWeiboLoginActivity extends Activity {
         
         mWeibo = new Weibo();
         
-        setUpTitle();
         setUpWebView();
         setContentView(mContentLayout, new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
         
         new RequestTokenTask().execute();
-    }
-    
-    private void setUpTitle() {
-	mTitle = new TextView(this);
-	mTitle.setText("与新浪连接");
-	mTitle.setTextColor(Color.WHITE);
-	mTitle.setGravity(Gravity.CENTER_VERTICAL);
-	mTitle.setTypeface(Typeface.DEFAULT_BOLD);
-	mTitle.setBackgroundColor(Color.BLUE);
-	mTitle.setCompoundDrawablePadding(6);
-//	mTitle.setCompoundDrawablesWithIntrinsicBounds(
-//		getResources().getDrawable(R.drawable.renren_android_title_logo), null, null, null);
-	mContentLayout.addView(mTitle);
     }
     
     private void setUpWebView() {
@@ -81,8 +66,18 @@ public class SinaWeiboLoginActivity extends Activity {
 	mWebView.setHorizontalScrollBarEnabled(false);
 	mWebView.setWebViewClient(new SinaWeiboWebViewClient());
 	mWebView.getSettings().setJavaScriptEnabled(true);
-//	mWebView.loadUrl(mUrl);
 	mContentLayout.addView(mWebView);
+    }
+    
+    @Override
+    protected void onResume() {
+	super.onResume();
+    }
+    
+    @Override
+    public void onBackPressed() {
+	setState(State.NOT_CONFIGURED);
+        super.onBackPressed();
     }
     
     private void setState(State state) {
@@ -151,6 +146,10 @@ public class SinaWeiboLoginActivity extends Activity {
 	@Override
 	protected void onPostExecute(AccessToken result) {
 	    setState(State.AUTHENTICATION_SUCCESS);
+	    if (mProgressDialog != null) {
+		mProgressDialog.dismiss();
+		mProgressDialog = null;
+	    }
 	    finish();
 	}
     }
@@ -180,6 +179,9 @@ public class SinaWeiboLoginActivity extends Activity {
 		}
 		
 		if (verifierCode != null && verifierCode.length() > 0) {
+		    if (mProgressDialog != null) {
+			mProgressDialog.show();
+		    }
 		    new RequestAccessTokenTask().execute(verifierCode);
 		}
 		view.stopLoading();

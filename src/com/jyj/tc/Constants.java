@@ -2,7 +2,7 @@ package com.jyj.tc;
 
 public interface Constants {
 
-    static final String PLUGIN_KEY_PARAMETER = "PLUGIN_KEY";
+    static final String PLUGIN_KEY_PARAMETER = "plugin_key";
     
     static final String PLUGIN_KEY = "Sina_Weibo_For_Time_Scape_5783964543459";
     
@@ -23,10 +23,10 @@ public interface Constants {
     static final int STATUS_TEXT_MAX_LENGTH = 420;
 
     // Intent constants used internally within the extension when throwng internal events.
-    static final String SEND_STATUS_UPDATE_INTENT = "com.jyj.weibotcpulgin..SEND_STATUS_UPDATE";
-    static final String REGISTER_PLUGIN_INTENT = "com.jyj.weibotcpulgin..REGISTER_PLUGIN";
-    static final String REFRESH_REQUEST_INTENT = "com.jyj.weibotcpulgin..REFRESH_REQUEST";
-    static final String AUTHENTICATE_INTENT = "com.jyj.weibotcpulgin..AUTHENTICATE";
-    static final String LOGOUT_INTENT = "com.jyj.weibotcpulgin..LOGOUT";
-    static final String LAUNCH_BROWSER_INTENT = "com.jyj.weibotcpulgin..VIEW_TILE";
+    static final String SEND_STATUS_UPDATE_INTENT = "com.jyj.weibotcpulgin.SEND_STATUS_UPDATE";
+    static final String REGISTER_PLUGIN_INTENT = "com.jyj.weibotcpulgin.REGISTER_PLUGIN";
+    static final String REFRESH_REQUEST_INTENT = "com.jyj.weibotcpulgin.REFRESH_REQUEST";
+    static final String AUTHENTICATE_INTENT = "com.jyj.weibotcpulgin.AUTHENTICATE";
+    static final String LOGOUT_INTENT = "com.jyj.weibotcpulgin.LOGOUT";
+    static final String LAUNCH_BROWSER_INTENT = "com.jyj.weibotcpulgin.VIEW_TILE";
 }
