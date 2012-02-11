@@ -57,9 +57,7 @@ public class WeiboForTC {
 	
 	List<Status> messages = getHomeTimeLine();
 	
-	List<ContentValues> messageValues = dataAccessor.getContentValuesFromMessages(messages, sourceId);
-	
-	int inserted = dataAccessor.insertMessages(messageValues);
+	int inserted = dataAccessor.insertMessages(messages, sourceId);
 	
 	if (inserted != 0) {
 	    setPagingSinceIdForMessages(messages.get(0).getId());

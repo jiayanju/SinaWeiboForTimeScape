@@ -1,5 +1,8 @@
 package com.jyj.tc;
 
+import android.R.integer;
+import android.net.Uri;
+
 public interface Constants {
 
     static final String PLUGIN_KEY_PARAMETER = "plugin_key";
@@ -7,6 +10,55 @@ public interface Constants {
     static final String PLUGIN_KEY = "Sina_Weibo_For_Time_Scape_5783964543459";
     
     static final String CALLBACK_URL = "http://localhost/callback_url";
+    
+    String AUTHORITY = "com.jyj.tc";
+    
+    Uri STATUS_DETAIL_PROVIDER_URI = Uri.parse("content://" + AUTHORITY + "/status_details");
+    Uri RETWEEN_STATUS_PROVIDER_URI = Uri.parse("content://" + AUTHORITY + "/retween_statuses");
+    
+    String DATABASE_NAME = "sina_weibo_tc.db";
+    int DATABASE_VERSION = 1;
+    
+    interface StatusDetailColumn {
+	String _ID = "_id";
+	String STATUS_ID = "status_id";
+	String CREATED_AT = "created_at";
+	String TEXT = "text";
+	String SOURCE = "source";
+	String FAVARITE = "favarite";
+	String TRUNCATED = "truncated";
+	String BMIDDLE_PIC = "bmiddle_pic";
+	String ORIGINAL_PIC = "original_pic";
+	String THUMBNAIL_PIC = "thumbnail_pic";
+	String REPOSTS_COUNT = "reposts_count";
+	String COMMENTS_COUNT = "comments_count";
+	String FRIEND_KEY = "friend_key";
+	String RETWEEN_STATUS_ID = "retween_status_id";
+    }
+    
+    interface RetweenStatusColumn {
+	String _ID = "_id";
+	String STATUS_ID = "status_id";
+	String CREATED_AT = "created_at";
+	String TEXT = "text";
+	String BMIDDLE_PIC = "bmiddle_pic";
+	String ORIGINAL_PIC = "original_pic";
+	String THUMBNAIL_PIC = "thumbnail_pic";
+	String REPOSTS_COUNT = "reposts_count";
+	String COMMENTS_COUNT = "comments_count";
+	String USER_ID = "user_id";
+	String USER_SCREEN_NAME = "user_screen_name";
+    }
+    
+    interface FAVARITE_VALUE {
+	int NOT_FAVARITE = 0;
+	int FAVARITE = 1;
+    }
+    
+    interface TRUNCATED_VALUE {
+	int NOT_TRUNCATED = 0;
+	int TRUNCATED = 1;
+    }
     
     // Shared preference constants, used in settings.
     static final String CONFIG_STORE = "Sina_Weibo_For_TC.conf";

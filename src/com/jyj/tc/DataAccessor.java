@@ -1,6 +1,9 @@
 package com.jyj.tc;
 
 import static com.jyj.tc.Constants.PLUGIN_KEY;
+import static com.jyj.tc.Constants.RETWEEN_STATUS_PROVIDER_URI;
+import static com.jyj.tc.Constants.STATUS_DETAIL_PROVIDER_URI;
+import static com.jyj.tc.Constants.STATUS_TEXT_MAX_LENGTH;
 import static com.jyj.tc.EventStreamConstants.EVENT_KEY_DATA_SEPARATOR;
 import static com.jyj.tc.EventStreamConstants.EVENT_PROVIDER_URI;
 import static com.jyj.tc.EventStreamConstants.FRIEND_PROVIDER_URI;
@@ -24,6 +27,10 @@ import android.net.Uri;
 import android.net.Uri.Builder;
 import android.util.Log;
 
+import com.jyj.tc.Constants.FAVARITE_VALUE;
+import com.jyj.tc.Constants.RetweenStatusColumn;
+import com.jyj.tc.Constants.StatusDetailColumn;
+import com.jyj.tc.Constants.TRUNCATED_VALUE;
 import com.jyj.tc.EventStreamConstants.ConfigState;
 import com.jyj.tc.EventStreamConstants.EventTable;
 import com.jyj.tc.EventStreamConstants.FriendTable;
@@ -205,15 +212,6 @@ public class DataAccessor {
 	return sourceId;
     }
 
-    public List<ContentValues> getContentValuesFromMessages(
-	    List<Status> messages, long sourceId) {
-	List<ContentValues> result = new ArrayList<ContentValues>();
-	for (Status message : messages) {
-	    result.add(createContentValuesFromMessage(message, sourceId));
-	}
-	return result;
-    }
-
     private ContentValues createContentValuesFromMessage(Status message,
 	    long sourceId) {
 	User user = message.getUser();
@@ -234,15 +232,80 @@ public class DataAccessor {
 	event.put(EventTable.OUTGOING, 0);
 	return event;
     }
+    
+    private ContentValues createStatusDetailValuesFromMessage(Status status) {
+	User user = status.getUser();
+	ContentValues statusDetail = new ContentValues();
+	statusDetail.put(StatusDetailColumn.STATUS_ID, status.getId());
+	statusDetail.put(StatusDetailColumn.CREATED_AT, status.getCreatedAt()
+		.getTime());
+	statusDetail.put(StatusDetailColumn.TEXT, status.getText());
+	statusDetail.put(StatusDetailColumn.SOURCE, status.getSource());
+	statusDetail.put(StatusDetailColumn.FAVARITE,
+		status.isFavorited() ? FAVARITE_VALUE.FAVARITE
+			: FAVARITE_VALUE.NOT_FAVARITE);
+	statusDetail.put(StatusDetailColumn.TRUNCATED,
+		status.isTruncated() ? TRUNCATED_VALUE.TRUNCATED
+			: TRUNCATED_VALUE.NOT_TRUNCATED);
+	statusDetail.put(StatusDetailColumn.BMIDDLE_PIC,
+		status.getBmiddle_pic());
+	statusDetail.put(StatusDetailColumn.ORIGINAL_PIC,
+		status.getOriginal_pic());
+	statusDetail.put(StatusDetailColumn.THUMBNAIL_PIC,
+		status.getThumbnail_pic());
+	statusDetail.put(StatusDetailColumn.FRIEND_KEY, user.getId());
+	if (status.isRetweet()) {
+	    statusDetail.put(StatusDetailColumn.RETWEEN_STATUS_ID, status.getRetweeted_status().getId());
+	}
+	return statusDetail;
+    }
+    
+    private ContentValues createRetweentedStatusValuesFromMessage(Status status) {
+	User user = status.getUser();
+	ContentValues statusDetail = new ContentValues();
+	statusDetail.put(RetweenStatusColumn.STATUS_ID, status.getId());
+	statusDetail.put(RetweenStatusColumn.CREATED_AT, status.getCreatedAt()
+		.getTime());
+	statusDetail.put(RetweenStatusColumn.TEXT, status.getText());
+	statusDetail.put(RetweenStatusColumn.BMIDDLE_PIC,
+		status.getBmiddle_pic());
+	statusDetail.put(RetweenStatusColumn.ORIGINAL_PIC,
+		status.getOriginal_pic());
+	statusDetail.put(RetweenStatusColumn.THUMBNAIL_PIC,
+		status.getThumbnail_pic());
+	statusDetail.put(RetweenStatusColumn.USER_ID, user.getId());
+	statusDetail.put(RetweenStatusColumn.USER_SCREEN_NAME, user.getScreenName());
+	return statusDetail;
+    }
 
-    public int insertMessages(List<ContentValues> messageValues) {
+    public int insertMessages(List<Status> statuses,long sourceId) {
+	
+	List<ContentValues> messageValues = new ArrayList<ContentValues>();
+	List<ContentValues> statusDetailValues = new ArrayList<ContentValues>();
+	List<ContentValues> retweentedStatusValues = new ArrayList<ContentValues>();
+	for (Status status : statuses) {
+	    messageValues.add(createContentValuesFromMessage(status, sourceId));
+	    statusDetailValues.add(createStatusDetailValuesFromMessage(status));
+	    if (status.isRetweet()) {
+		retweentedStatusValues.add(createRetweentedStatusValuesFromMessage(status));
+	    }
+	}
+	
+	int inserted = bulkInsertedValues(EVENT_PROVIDER_URI, messageValues);
+	bulkInsertedValues(STATUS_DETAIL_PROVIDER_URI, statusDetailValues);
+	bulkInsertedValues(RETWEEN_STATUS_PROVIDER_URI, retweentedStatusValues);
+
+	return inserted;
+    }
+    
+    private int bulkInsertedValues(Uri uri, List<ContentValues> messageValues) {
 	ArrayList<ContentValues> bulkValues = new ArrayList<ContentValues>();
 	int inserted = 0;
 	for (int i = 0; i < messageValues.size(); i++) {
 	    bulkValues.add(messageValues.get(i));
 
 	    if (bulkValues.size() >= BULK_INSERT_MAX_COUNT) {
-		inserted += mResolver.bulkInsert(EVENT_PROVIDER_URI,
+		inserted += mResolver.bulkInsert(uri,
 			(ContentValues[]) bulkValues
 				.toArray(new ContentValues[bulkValues.size()]));
 		bulkValues.clear();
@@ -256,14 +319,14 @@ public class DataAccessor {
 	}
 
 	if (bulkValues.size() > 0) {
-	    inserted += mResolver.bulkInsert(EVENT_PROVIDER_URI,
+	    inserted += mResolver.bulkInsert(uri,
 		    (ContentValues[]) bulkValues
 			    .toArray(new ContentValues[bulkValues.size()]));
 	    bulkValues.clear();
 	}
-
 	return inserted;
     }
+    
 
     public List<Long> getFriendListFromEventStream(long sourceId) {
 	ArrayList<Long> friends = new ArrayList<Long>();
